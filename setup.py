@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='wasapflow-bridge',
-    version='1.0.0',
+    version='1.1.0',
     description='Official Python SDK for WasapFlow Bridge — WhatsApp Cloud API via WasapFlow Tech Provider',
     author='WasapFlow',
     license='MIT',

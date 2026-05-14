@@ -231,8 +231,14 @@ class _Clients:
     def remove(self, waba_id: str) -> dict:
         return self._http.delete(f'/clients/{waba_id}')
 
-    def refresh(self, waba_id: str) -> dict:
-        return self._http.post(f'/clients/{waba_id}/refresh')
+    def refresh(self, waba_id: str, access_token: str = None) -> dict:
+        """Refresh quality rating and tier. Optionally update access token."""
+        body = {'access_token': access_token} if access_token else {}
+        return self._http.post(f'/clients/{waba_id}/refresh', body)
+
+    def resubscribe_webhook(self, waba_id: str) -> dict:
+        """Reconnect Meta webhook for a WABA. Call if webhook events stop arriving."""
+        return self._http.post(f'/clients/{waba_id}/resubscribe-webhook')
 
 
 # ─── Contacts ────────────────────────────────────────────────────────────────

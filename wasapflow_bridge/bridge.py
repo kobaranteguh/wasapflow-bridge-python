@@ -308,7 +308,7 @@ class _ClientScope:
 
 class WasapFlowBridge:
     """
-    WasapFlow Bridge Python SDK (v1.1.0)
+    WasapFlow Bridge Python SDK (v1.2.0)
 
     Usage::
 

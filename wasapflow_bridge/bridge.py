@@ -225,6 +225,17 @@ class _Clients:
             'display_name': display_name
         })
 
+    def register_from_code(self, code: str, display_name: str = '') -> dict:
+        """Register a WABA using an Embedded Signup code. Token exchange happens server-side."""
+        return self._http.post('/clients/register-from-code', {
+            'code': code,
+            'display_name': display_name
+        })
+
+    def get_embedded_signup_config(self) -> dict:
+        """Get Meta App ID and Config ID for your Embedded Signup frontend."""
+        return self._http.get('/embedded-signup/config')
+
     def list(self) -> dict:
         return self._http.get('/clients')
 
@@ -308,7 +319,7 @@ class _ClientScope:
 
 class WasapFlowBridge:
     """
-    WasapFlow Bridge Python SDK (v1.2.0)
+    WasapFlow Bridge Python SDK (v1.3.0)
 
     Usage::
 

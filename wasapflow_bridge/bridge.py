@@ -236,6 +236,18 @@ class _Clients:
         """Get Meta App ID and Config ID for your Embedded Signup frontend."""
         return self._http.get('/embedded-signup/config')
 
+    def get_connect_url(self, display_name: str = '') -> str:
+        """
+        Get the WasapFlow hosted Embedded Signup popup URL.
+        Open this URL as a popup from your frontend.
+        FB.init runs on officialapi.wasapflow.com — Meta only sees WasapFlow.
+        Listen for postMessage with type='WASAPFLOW_CONNECT_SUCCESS'.
+        """
+        import urllib.parse
+        base = self._http._base_url.rstrip('/')
+        params = urllib.parse.urlencode({'partner_key': self._http._partner_key, 'display_name': display_name})
+        return f'{base}/bridge/connect?{params}'
+
     def list(self) -> dict:
         return self._http.get('/clients')
 
@@ -319,7 +331,7 @@ class _ClientScope:
 
 class WasapFlowBridge:
     """
-    WasapFlow Bridge Python SDK (v1.4.0)
+    WasapFlow Bridge Python SDK (v1.5.0)
 
     Usage::
 

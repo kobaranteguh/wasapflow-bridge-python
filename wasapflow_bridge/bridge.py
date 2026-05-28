@@ -225,11 +225,12 @@ class _Clients:
             'display_name': display_name
         })
 
-    def register_from_code(self, code: str, display_name: str = '') -> dict:
+    def register_from_code(self, code: str, display_name: str = '', connection_mode: str = 'coexistence') -> dict:
         """Register a WABA using an Embedded Signup code. Token exchange happens server-side."""
         return self._http.post('/clients/register-from-code', {
             'code': code,
-            'display_name': display_name
+            'display_name': display_name,
+            'connection_mode': connection_mode
         })
 
     def get_embedded_signup_config(self) -> dict:

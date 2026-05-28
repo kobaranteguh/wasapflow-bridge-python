@@ -84,7 +84,11 @@ def webhook():
     data = event.get('data', {})
 
     if ev == 'message.received':
-        print(f"Message from {data['from']}: {data['text']}")
+        # 🆔 data['bsuid'] is the Business-Scoped User ID — stable across
+        # WhatsApp username changes (rollout Jun 2026). Store BOTH `from`
+        # (phone) and `bsuid` as a future-proof customer identifier.
+        bsuid = data.get('bsuid')
+        print(f"Message from {data['from']} (bsuid: {bsuid}): {data['text']}")
     elif ev == 'message.delivered':
         print(f"Delivered: {data['message_id']}")
     elif ev == 'waba.quality_updated':

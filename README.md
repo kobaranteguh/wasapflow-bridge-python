@@ -1,113 +1,68 @@
-# wasapflow-bridge (Python SDK)
+# Deprecated — do not use
 
-Official Python SDK for **WasapFlow Bridge**.
+**This SDK is no longer maintained and is not part of the WasapFlow Bridge
+documentation.** It was retired on 21 August 2026.
 
-## Install
+## Why
 
-```bash
-pip install wasapflow-bridge
+Bridge is plain REST — two headers, JSON in, JSON out. A client library added a
+dependency to version and audit, and it lagged the API: this SDK wraps roughly 13
+endpoints, while Bridge now has **68**. That gap taught people the API was smaller
+than it is, and integrations built workarounds for things Bridge already did.
+
+Checking a month of production access logs, **no request to Bridge came from this
+SDK.** Every partner was already calling over plain HTTP.
+
+## What to use instead
+
+Call the API directly with whatever HTTP client your stack already has — `fetch`,
+axios, Guzzle, `requests`, `httpx`, `curl`. One small wrapper covers all 68
+endpoints:
+
+```javascript
+const BASE = 'https://officialapi.wasapflow.com/bridge/v1';
+
+async function bridge(path, { method = 'GET', wabaId, body } = {}) {
+    const res = await fetch(BASE + path, {
+        method,
+        headers: {
+            'x-partner-key': process.env.WF_PARTNER_KEY,
+            ...(wabaId ? { 'x-waba-id': wabaId } : {}),
+            'Content-Type': 'application/json',
+        },
+        body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json();
+    if (!data.success) {
+        const e = new Error(`${data.error.code}: ${data.error.message}`);
+        e.code = data.error.code;
+        e.metaCode = data.error.meta_code;   // branch on this, never on message text
+        e.status = res.status;
+        throw e;
+    }
+    return data;
+}
 ```
 
-## Usage
+**All fields are `snake_case`** — requests and responses alike: `waba_id`,
+`phone_number_id`, `access_token`. This SDK used camelCase internally, so any code
+copied from it that reads `client.wabaId` is reading a field the API never
+returns.
 
-```python
-from wasapflow_bridge import WasapFlowBridge, WebhookVerifier
+## Documentation
 
-bridge = WasapFlowBridge(
-    partner_key='wf_live_xxx',
-    webhook_secret='whsec_xxx',
-    base_url='https://api.wasapflow.com'
-)
+- API reference — https://github.com/kobaranteguh/api
+- Getting started guide — https://github.com/kobaranteguh/guide
+- Changelog — https://github.com/kobaranteguh/changelog
+- Docs site — https://partner.wasapflow.com/bridge/docs
 
-# Register WABA
-bridge.clients.register(
-    waba_id='123456789',
-    phone_number_id='987654321',
-    access_token='EAAxxxxx',
-    display_name='Kedai ABC'
-)
+Already integrated? The guide's **Prompt C** is written for an AI coding
+assistant and audits an existing integration against every change, including
+replacing this SDK.
 
-# Send text
-waba = bridge.client('123456789')
-waba.messages.send(to='60123456789', text='Hello dari Python!')
+## If you still have this installed
 
-# Send template
-waba.messages.template(
-    to='60123456789',
-    template='order_confirmed',
-    language='ms',
-    params=['John', 'RM50.00']
-)
-
-# Send image
-waba.messages.image(to='60123456789', url='https://example.com/img.jpg', caption='Produk')
-
-# Send buttons
-waba.messages.buttons(
-    to='60123456789',
-    body='Pilih pakej:',
-    buttons=[
-        {'id': 'basic', 'title': 'Basic RM29'},
-        {'id': 'pro',   'title': 'Pro RM79'}
-    ]
-)
-
-# Check contact
-result = bridge.contacts.check('60123456789', waba_id='123456789')
-print(result['whatsapp_id'])
-
-# Upload media
-media = bridge.contacts.upload_media(
-    url='https://example.com/invoice.pdf',
-    mime_type='application/pdf',
-    waba_id='123456789'
-)
-print(media['media_id'])
-```
-
-## Webhook (Flask)
-
-```python
-from flask import Flask, request
-from wasapflow_bridge import WebhookVerifier
-
-app = Flask(__name__)
-verifier = WebhookVerifier(secret='whsec_xxx')
-
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    event = verifier.verify(dict(request.headers), request.get_data())
-    if event is None:
-        return 'Invalid signature', 401
-
-    ev = event.get('event')
-    data = event.get('data', {})
-
-    if ev == 'message.received':
-        # 🆔 data['bsuid'] is the Business-Scoped User ID — stable across
-        # WhatsApp username changes (rollout Jun 2026). Store BOTH `from`
-        # (phone) and `bsuid` as a future-proof customer identifier.
-        bsuid = data.get('bsuid')
-        print(f"Message from {data['from']} (bsuid: {bsuid}): {data['text']}")
-    elif ev == 'message.delivered':
-        print(f"Delivered: {data['message_id']}")
-    elif ev == 'waba.quality_updated':
-        print(f"Quality: {data['previous_rating']} -> {data['quality_rating']}")
-
-    return 'OK', 200
-```
-
-## Error Handling
-
-```python
-from wasapflow_bridge.bridge import BridgeError
-
-try:
-    waba.messages.send(to='60123456789', text='Hello')
-except BridgeError as e:
-    print(f"Code: {e.code}, Message: {e}")
-    if e.code == 'RATE_LIMIT_EXCEEDED':
-        print('Slow down requests')
-    elif e.code == 'META_ERROR':
-        print('Meta error:', e.bridge_error.get('meta_code'))
-```
+It will keep working, but it is unsupported and knows nothing about the 32
+endpoints added in Bridge 2.9.0 — QR codes, conversational automation, blocking,
+commerce settings, call settings, phone status, WABA diagnostics, Flows, number
+lifecycle, calling and groups. Replace it with the wrapper above.
